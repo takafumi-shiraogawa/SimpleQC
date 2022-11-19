@@ -45,7 +45,7 @@ class driver():
     return ret
 
 
-  def ks_scf(self):
+  def scf(self):
     # Not direct SCF
 
     # internal parameters

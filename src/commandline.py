@@ -1,7 +1,7 @@
 from functools import wraps
 import time
 import setting as conf
-import ksdft
+import hf_ksdft
 
 def stop_watch(func):
   """ Measure time """
@@ -23,12 +23,12 @@ def stop_watch(func):
   return wrapper
 
 @stop_watch
-def run_ksdft():
+def run_hf_ksdft():
   nuclear_numbers, geom_coordinates, basis_set_name, ksdft_functional_name = conf.get_calc_params()
-  calc_mol = ksdft.driver(nuclear_numbers, geom_coordinates,
+  calc_mol = hf_ksdft.driver(nuclear_numbers, geom_coordinates,
                     basis_set_name, ksdft_functional_name)
-  calc_mol.ks_scf()
+  calc_mol.scf()
 
 
 if __name__ == "__main__":
-  run_ksdft()
+  run_hf_ksdft()
