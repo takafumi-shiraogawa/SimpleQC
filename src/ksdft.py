@@ -22,6 +22,17 @@ class driver():
     return np.linalg.eigh(fock_matrix_in_orthogonalize_basis)
 
 
+  def calc_density_matrix_in_ao_basis(self, mo_coefficients):
+    occupied_mo_coefficients = mo_coefficients[:, :int(self._num_electrons / 2)]
+
+    return np.matmul(occupied_mo_coefficients, np.transpose(occupied_mo_coefficients))
+    # It is equivalent to
+    # density_matrix_in_ao_basis = np.einsum(
+    #     'pi,qi->pq', occupied_mo_coefficients, occupied_mo_coefficients)
+    # p, q: AO
+    # i: MO
+
+
   def ks_scf(self):
     # Not direct SCF
 
@@ -61,11 +72,7 @@ class driver():
 
     # Form MO coefficients in the original basis
     mo_coefficients = np.matmul(orthogonalizer, mo_coefficients)
-    occupied_mo_coefficients = mo_coefficients[:, :int(self._num_electrons / 2)]
-    density_matrix_in_ao_basis = np.matmul(
-        occupied_mo_coefficients, np.transpose(occupied_mo_coefficients))
-    # It is equivalent to
-    # density_matrix_in_ao_basis = np.einsum(
-    #     'pi,qi->pq', occupied_mo_coefficients, occupied_mo_coefficients)
-    # p, q: AO
-    # i: MO
+
+    # Calculate density matrix in AO basis
+    density_matrix_in_ao_basis = driver.calc_density_matrix_in_ao_basis(
+        self, mo_coefficients)
