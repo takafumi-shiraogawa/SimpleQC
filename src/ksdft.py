@@ -32,9 +32,24 @@ class driver():
     # p, q: AO
     # i: MO
 
+  @staticmethod
+  def nuclei_nuclei(coordinates, charges):
+    #: Conversion factor from Angstrom to Bohr
+    ang_to_bohr = 1 / 0.52917721067
+    natoms = len(coordinates)
+    ret = 0.0
+    for i in range(natoms):
+        for j in range(i + 1, natoms):
+            d = np.linalg.norm((coordinates[i] - coordinates[j]) *  ang_to_bohr)
+            ret += charges[i] * charges[j] / d
+    return ret
+
 
   def ks_scf(self):
     # Not direct SCF
+
+    # internal parameters
+    num_max_scf_iter = 1000
 
     ### Preprocessing for SCF
 
@@ -76,3 +91,39 @@ class driver():
     # Calculate density matrix in AO basis
     density_matrix_in_ao_basis = driver.calc_density_matrix_in_ao_basis(
         self, mo_coefficients)
+
+
+    nuclear_repulsion_energy = driver.nuclei_nuclei(
+        self._geom_coordinates, self._nuclear_numbers)
+
+
+    ### Perform SCF
+    for idx_scf in range(num_max_scf_iter):
+      # Calculate Fock matrix in AO basis
+      electron_repulsion_in_Fock_matrix = np.einsum(
+          'pqrs,rs->pq', ao_electron_repulsion_integral, density_matrix_in_ao_basis)
+      exchange_in_Fock_matrix = np.einsum(
+          'prqs,rs->pq', ao_electron_repulsion_integral, density_matrix_in_ao_basis)
+      fock_matrix = core_hamiltonian + 2.0 * electron_repulsion_in_Fock_matrix \
+          - exchange_in_Fock_matrix
+
+      # Calculate the electronic energy (without nuclei repulsion)
+      electronic_energy = np.sum(np.multiply(
+          density_matrix_in_ao_basis, core_hamiltonian + fock_matrix))
+      total_energy = electronic_energy + nuclear_repulsion_energy
+      print(total_energy)
+      if idx_scf > 0:
+        if abs(old_total_energy - total_energy) < 1.e-9:
+          break
+      old_total_energy = total_energy
+
+      # Solving the one-electron eigenvalue problem
+      orbital_energies, mo_coefficients = driver.solve_one_electron_problem(
+        orthogonalizer, fock_matrix)
+
+      # Form MO coefficients in the original basis
+      mo_coefficients = np.matmul(orthogonalizer, mo_coefficients)
+
+      # Calculate density matrix in AO basis
+      density_matrix_in_ao_basis = driver.calc_density_matrix_in_ao_basis(
+          self, mo_coefficients)
