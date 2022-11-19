@@ -34,7 +34,7 @@ class driver():
     # Compute all requisite analytical AO integrations
     ao_kinetic_integral = proc_ao_integral.ao_kinetic_integral()
     ao_hartree_potential_integral = proc_ao_integral.ao_hartree_potential_integral()
-    ap_electron_repulsion_integral = proc_ao_integral.ap_electron_repulsion_integral()
+    ao_electron_repulsion_integral = proc_ao_integral.ap_electron_repulsion_integral()
     ao_overlap_integral = proc_ao_integral.ao_overlap_integral()
 
     # Compute core_hamiltonian
