@@ -33,16 +33,16 @@ class proc_psi4():
 
 
   def ao_kinetic_integral(self):
-    return np.asarray(self._mints.ao_kinetic())
+    return np.asarray(self._mints.ao_kinetic(), dtype='float64')
 
 
   def ao_hartree_potential_integral(self):
-    return np.asarray(self._mints.ao_potential())
+    return np.asarray(self._mints.ao_potential(), dtype='float64')
 
 
   def ap_electron_repulsion_integral(self):
-    return np.asarray(self._mints.ao_eri())
+    return np.asarray(self._mints.ao_eri(), dtype='float64')
 
 
   def ao_overlap_integral(self):
-    return np.asarray(self._mints.ao_overlap())
+    return np.asarray(self._mints.ao_overlap(), dtype='float64')
