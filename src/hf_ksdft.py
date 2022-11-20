@@ -111,7 +111,7 @@ class driver():
       electronic_energy = np.sum(np.multiply(
           density_matrix_in_ao_basis, core_hamiltonian + fock_matrix))
       total_energy = electronic_energy + nuclear_repulsion_energy
-      print(total_energy)
+      print("SCF step %s: " % str(idx_scf + 1), total_energy, "Hartree")
       if idx_scf > 0:
         if abs(old_total_energy - total_energy) < 1.e-9:
           break
