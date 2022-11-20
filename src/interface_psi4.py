@@ -31,6 +31,11 @@ class proc_psi4():
     wfn = psi4.core.Wavefunction.build(self._mol, psi4.core.get_global_option('BASIS'))
     self._mints = psi4.core.MintsHelper(wfn.basisset())
 
+    self._psi4_object_ao_basis_sets = wfn.basisset()
+    self._psi4_object_ksdft_functional = psi4.driver.dft.build_superfunctional(
+        'svwn', True)[0]
+    # True means the restricted system
+
 
   def ao_kinetic_integral(self):
     return np.asarray(self._mints.ao_kinetic(), dtype='float64')
@@ -46,3 +51,21 @@ class proc_psi4():
 
   def ao_overlap_integral(self):
     return np.asarray(self._mints.ao_overlap(), dtype='float64')
+
+
+  def gener_numerical_integral_grids_and_weights(self):
+    # Generate 3d Cartesian grids and weights for each grid based on the Becke's method.
+    # Refer to https://github.com/psi4/psi4numpy/blob/master/Tutorials/04_Density_Functional_Theory/4a_Grids.ipynb
+    # written by Dr. Victor H. Chavez.
+    Vpot = psi4.core.VBase.build(
+        self._psi4_object_ao_basis_sets, self._psi4_object_ksdft_functional, "RV")
+    Vpot.initialize()
+    grids_x, grids_y, grids_z, weights = Vpot.get_np_xyzw()
+
+    num_grids = len(weights)
+    grids = np.zeros((num_grids, 3))
+    grids[:, 0] = grids_x
+    grids[:, 1] = grids_y
+    grids[:, 2] = grids_z
+
+    return grids, weights
