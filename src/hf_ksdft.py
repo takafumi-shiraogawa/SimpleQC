@@ -8,7 +8,7 @@ class driver():
     self._geom_coordinates = geom_coordinates
     self._basis_set_name = basis_set_name
     self._ksdft_functional_name = ksdft_functional_name
-    self._num_electrons = nuclear_numbers.sum()
+    self._num_electrons = np.sum(nuclear_numbers)
 
     if self._num_electrons % 2 != 0:
       raise NotImplementedError("Odd-electron system cannot be computed!")
@@ -35,15 +35,15 @@ class driver():
     # i: MO
 
   @staticmethod
-  def nuclei_nuclei(coordinates, charges):
+  def calc_nuclei_nuclei_repulsion_energy(coordinates, charges):
     #: Conversion factor from Angstrom to Bohr
     ang_to_bohr = 1 / 0.52917721067
     natoms = len(coordinates)
     ret = 0.0
     for i in range(natoms):
-        for j in range(i + 1, natoms):
-            d = np.linalg.norm((coordinates[i] - coordinates[j]) *  ang_to_bohr)
-            ret += charges[i] * charges[j] / d
+      for j in range(i + 1, natoms):
+        d = np.linalg.norm((coordinates[i] - coordinates[j]) * ang_to_bohr)
+        ret += charges[i] * charges[j] / d
     return ret
 
 
@@ -54,7 +54,6 @@ class driver():
       flag_ksdft = False
     else:
       flag_ksdft = True
-      import psi4
 
     # internal parameters
     num_max_scf_iter = 1000
@@ -104,7 +103,7 @@ class driver():
         self, mo_coefficients)
 
 
-    nuclear_repulsion_energy = driver.nuclei_nuclei(
+    nuclear_repulsion_energy = driver.calc_nuclei_nuclei_repulsion_energy(
         self._geom_coordinates, self._nuclear_numbers)
 
 
@@ -144,18 +143,15 @@ class driver():
       density_matrix_in_ao_basis = driver.calc_density_matrix_in_ao_basis(
           self, mo_coefficients)
 
-    self._density_matrix_in_ao_basis = density_matrix_in_ao_basis
-    self._overlap_integral = ao_overlap_integral
-
     def calc_mulliken_atomic_charges(density_matrix_in_ao_basis, ao_overlap_integral):
       ao_atomic_affiliation = proc_ao_integral.check_basis_atomic_affiliation()
       charge_matrix = np.matmul(density_matrix_in_ao_basis, ao_overlap_integral)
 
       num_atom = len(self._nuclear_numbers)
-      mulliken_atomic_charge = np.zeros(num_atom)
+      mulliken_atomic_charges = np.zeros(num_atom)
       for i in range(len(ao_atomic_affiliation)):
-        mulliken_atomic_charge[ao_atomic_affiliation[i]] += -charge_matrix[i, i]
-      mulliken_atomic_charge += self._nuclear_numbers
-      print("Mulliken atomic charges (|e|):", *mulliken_atomic_charge)
+        mulliken_atomic_charges[ao_atomic_affiliation[i]] += -charge_matrix[i, i]
+      mulliken_atomic_charges += self._nuclear_numbers
+      print("Mulliken atomic charges (|e|):", *mulliken_atomic_charges)
 
     calc_mulliken_atomic_charges(density_matrix_in_ao_basis, ao_overlap_integral)
