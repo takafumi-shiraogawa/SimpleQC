@@ -3,7 +3,8 @@ import interface_psi4 as ipsi4
 
 
 class driver():
-  def __init__(self, nuclear_numbers, geom_coordinates, basis_set_name, ksdft_functional_name):
+  def __init__(self, mol_xyz, nuclear_numbers, geom_coordinates, basis_set_name, ksdft_functional_name):
+    self._mol_xyz = mol_xyz
     self._nuclear_numbers = nuclear_numbers
     self._geom_coordinates = geom_coordinates
     self._basis_set_name = basis_set_name
@@ -61,8 +62,9 @@ class driver():
     ### Preprocessing for SCF
 
     proc_ao_integral = ipsi4.proc_psi4(
-        self._nuclear_numbers, self._geom_coordinates,
-        self._basis_set_name, self._ksdft_functional_name)
+        self._mol_xyz, self._nuclear_numbers,
+        self._geom_coordinates, self._basis_set_name,
+        self._ksdft_functional_name)
 
     # Compute all requisite analytical AO integrations
     ao_kinetic_integral = proc_ao_integral.ao_kinetic_integral()

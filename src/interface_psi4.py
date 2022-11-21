@@ -11,9 +11,7 @@ def gener_psi4_geom(nuclear_numbers, geom_coordinates):
 
 
 class proc_psi4():
-  def __init__(self, nuclear_numbers, geom_coordinates, basis_set_name, ksdft_functional_name):
-    # This redundant operation will be removed.
-    mol_xyz = open('temp_psi4_geom.xyz', mode='r').read()
+  def __init__(self, mol_xyz, nuclear_numbers, geom_coordinates, basis_set_name, ksdft_functional_name):
     mol = psi4.geometry(mol_xyz)
 
     # symbol_nuclear_numbers = gener_psi4_geom(nuclear_numbers, geom_coordinates)
