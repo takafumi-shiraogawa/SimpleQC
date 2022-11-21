@@ -10,6 +10,8 @@ class driver():
     self._ksdft_functional_name = ksdft_functional_name
     self._num_electrons = nuclear_numbers.sum()
 
+    if self._num_electrons % 2 != 0:
+      raise NotImplementedError("Odd-electron system cannot be computed!")
 
   @staticmethod
   def solve_one_electron_problem(orthogonalizer, fock_matrix):
