@@ -69,3 +69,13 @@ class proc_psi4():
     grids[:, 2] = grids_z
 
     return grids, weights
+
+
+  def check_basis_atomic_affiliation(self):
+    # It is SO in Psi4
+    num_ao = self._psi4_object_ao_basis_sets.nbf()
+    ao_atomic_affiliation = np.zeros(num_ao, dtype=int)
+    for i in range(num_ao):
+      ao_atomic_affiliation[i] = self._psi4_object_ao_basis_sets.function_to_center(i)
+
+    return ao_atomic_affiliation

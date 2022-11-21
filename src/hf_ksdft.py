@@ -133,3 +133,19 @@ class driver():
       # Calculate density matrix in AO basis
       density_matrix_in_ao_basis = driver.calc_density_matrix_in_ao_basis(
           self, mo_coefficients)
+
+    self._density_matrix_in_ao_basis = density_matrix_in_ao_basis
+    self._overlap_integral = ao_overlap_integral
+
+    def calc_mulliken_atomic_charges(density_matrix_in_ao_basis, ao_overlap_integral):
+      ao_atomic_affiliation = proc_ao_integral.check_basis_atomic_affiliation()
+      charge_matrix = np.matmul(density_matrix_in_ao_basis, ao_overlap_integral)
+
+      num_atom = len(self._nuclear_numbers)
+      mulliken_atomic_charge = np.zeros(num_atom)
+      for i in range(len(ao_atomic_affiliation)):
+        mulliken_atomic_charge[ao_atomic_affiliation[i]] += -charge_matrix[i, i]
+      mulliken_atomic_charge += self._nuclear_numbers
+      print("Mulliken atomic charges (|e|):", *mulliken_atomic_charge)
+
+    calc_mulliken_atomic_charges(density_matrix_in_ao_basis, ao_overlap_integral)
