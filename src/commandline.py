@@ -24,9 +24,10 @@ def stop_watch(func):
 
 @stop_watch
 def run_hf_ksdft():
-  nuclear_numbers, geom_coordinates, basis_set_name, ksdft_functional_name = conf.get_calc_params()
-  calc_mol = hf_ksdft.driver(nuclear_numbers, geom_coordinates,
-                    basis_set_name, ksdft_functional_name)
+  mol_xyz, nuclear_numbers, geom_coordinates, basis_set_name, ksdft_functional_name = conf.get_calc_params()
+  calc_mol = hf_ksdft.driver(mol_xyz, nuclear_numbers,
+                    geom_coordinates, basis_set_name,
+                    ksdft_functional_name)
   calc_mol.scf()
 
 

@@ -11,6 +11,7 @@ def read_xyz(xyz_file_name):
   coordinates = []
 
   count = 0
+  mol_xyz = ''
   for line in xyz_lines:
     count += 1
     if count == 1:
@@ -18,6 +19,7 @@ def read_xyz(xyz_file_name):
     elif count > 2:
       if len(line) == 0:
           break
+      mol_xyz += str(line)
       parts = line.split()
       try:
           nuclear_numbers.append(int(parts[0]))
@@ -25,21 +27,7 @@ def read_xyz(xyz_file_name):
           nuclear_numbers.append(lut.element_Z_from_sym(parts[0]))
       coordinates.append([float(_) for _ in parts[1:4]])
 
-  # This will be removed.
-  # Just to handle the PSI4's special input for the geometry.
-  with open('temp_psi4_geom.xyz', mode='w') as fh:
-    count = 0
-    for line in xyz_lines:
-      count += 1
-      if count == 1 or count == 2:
-        pass
-      else:
-        if len(line) == 0:
-          break
-        print(line.replace("\n", ''), file=fh)
-
-  return np.array(nuclear_numbers), np.array(coordinates)
-
+  return mol_xyz, np.array(nuclear_numbers), np.array(coordinates)
 
 def get_calc_params():
   """ Get parameters for the calculation.
@@ -55,6 +43,6 @@ def get_calc_params():
   basis_set_name = sqc_conf['calc']['gauss_basis_set']
   ksdft_functional_name = sqc_conf['calc']['ksdft_functional']
 
-  nuclear_numbers, geom_coordinates = read_xyz(xyz_file_name)
+  mol_xyz, nuclear_numbers, geom_coordinates = read_xyz(xyz_file_name)
 
-  return nuclear_numbers, geom_coordinates, basis_set_name, ksdft_functional_name
+  return mol_xyz, nuclear_numbers, geom_coordinates, basis_set_name, ksdft_functional_name
