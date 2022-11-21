@@ -25,7 +25,8 @@ class driver():
   def calc_density_matrix_in_ao_basis(self, mo_coefficients):
     occupied_mo_coefficients = mo_coefficients[:, :int(self._num_electrons / 2)]
 
-    return np.matmul(occupied_mo_coefficients, np.transpose(occupied_mo_coefficients))
+    # return 2.0 * np.matmul(occupied_mo_coefficients, np.transpose(occupied_mo_coefficients))
+    return 2.0 * np.einsum('pi,qi->pq', occupied_mo_coefficients, occupied_mo_coefficients)
     # It is equivalent to
     # density_matrix_in_ao_basis = np.einsum(
     #     'pi,qi->pq', occupied_mo_coefficients, occupied_mo_coefficients)
@@ -104,12 +105,17 @@ class driver():
           'pqrs,rs->pq', ao_electron_repulsion_integral, density_matrix_in_ao_basis)
       exchange_in_Fock_matrix = np.einsum(
           'prqs,rs->pq', ao_electron_repulsion_integral, density_matrix_in_ao_basis)
-      fock_matrix = core_hamiltonian + 2.0 * electron_repulsion_in_Fock_matrix \
-          - exchange_in_Fock_matrix
+      fock_matrix = core_hamiltonian + electron_repulsion_in_Fock_matrix \
+          - 0.5 * exchange_in_Fock_matrix
 
       # Calculate the electronic energy (without nuclei repulsion)
-      electronic_energy = np.sum(np.multiply(
-          density_matrix_in_ao_basis, core_hamiltonian + fock_matrix))
+      # print(np.shape(np.matmul(density_matrix_in_ao_basis, core_hamiltonian + fock_matrix)))
+      # electronic_energy = np.matmul(density_matrix_in_ao_basis, core_hamiltonian + fock_matrix)
+      electronic_energy = 0.5 * \
+          np.einsum('pq,pq->', density_matrix_in_ao_basis,
+                    core_hamiltonian + fock_matrix)
+      # np.sum(np.multiply(
+      #     density_matrix_in_ao_basis, core_hamiltonian + fock_matrix))
       total_energy = electronic_energy + nuclear_repulsion_energy
       print("SCF step %s: " % str(idx_scf + 1), total_energy, "Hartree")
       if idx_scf > 0:
