@@ -1,5 +1,4 @@
 import numpy as np
-import psi4
 import interface_psi4 as ipsi4
 
 
@@ -47,6 +46,12 @@ class driver():
 
   def scf(self):
     # Not direct SCF
+
+    if self._ksdft_functional_name == '' or self._ksdft_functional_name == None:
+      flag_ksdft = False
+    else:
+      flag_ksdft = True
+      import psi4
 
     # internal parameters
     num_max_scf_iter = 1000
