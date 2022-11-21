@@ -28,10 +28,14 @@ class proc_psi4():
     self._ksdft_functional_name = ksdft_functional_name
 
     psi4.set_options({'basis': self._basis_set_name})
+    # psi4.set_options({'BASIS': self._basis_set_name,
+    #               'DFT_SPHERICAL_POINTS': 6,
+    #               'DFT_RADIAL_POINTS':    5})
     wfn = psi4.core.Wavefunction.build(self._mol, psi4.core.get_global_option('BASIS'))
-    self._mints = psi4.core.MintsHelper(wfn.basisset())
-
+    self._wfn = wfn
     self._psi4_object_ao_basis_sets = wfn.basisset()
+    self._mints = psi4.core.MintsHelper(self._psi4_object_ao_basis_sets)
+
     self._psi4_object_ksdft_functional = psi4.driver.dft.build_superfunctional(
         'svwn', True)[0]
     # True means the restricted system
@@ -51,6 +55,68 @@ class proc_psi4():
 
   def ao_overlap_integral(self):
     return np.asarray(self._mints.ao_overlap(), dtype='float64')
+
+
+  def set_Vpot(self):
+    self._Vpot = psi4.core.VBase.build(
+        self._psi4_object_ao_basis_sets, self._psi4_object_ksdft_functional, "RV")
+    self._Vpot.initialize()
+    self._Vpot.initialize()
+
+
+  def set_density_matrix_in_Vpot(self, density_matrix):
+    self._Vpot.set_D([density_matrix])
+    self._Vpot.properties()[0].set_pointers(density_matrix)
+
+
+  # def ao_values(self):
+  #   # at each grid
+  #   svwn_w, wfn = psi4.energy("SVWN", return_wfn=True)
+  #   Vpot = wfn.V_potential()
+
+  #   # Grab a "points function" to compute the Phi matrices
+  #   points_func = Vpot.properties()[0]
+
+  #   # Grab a block and obtain its local mapping
+  #   block = Vpot.get_block(1)
+  #   npoints = block.npoints()
+  #   lpos = np.array(block.functions_local_to_global())
+  #   print("Local basis function mapping")
+  #   print(lpos)
+  #   print(len(lpos))
+
+  #   # Copmute phi, note the number of points and function per phi changes.
+  #   phi = np.array(points_func.basis_values()["PHI"])[:npoints, :lpos.shape[0]]
+  #   print("\nPhi Matrix")
+  #   print(phi)
+  #   print(np.shape(phi))
+  #   phi_x = np.array(points_func.basis_values()["PHI_X"])[:npoints, :lpos.shape[0]]
+  #   print(np.shape(phi_x))
+
+  #   # num_grids = len(grids)
+  #   # for idx_grid in range(num_grids):
+  #     # # compute_phi does not work!
+  #     # ao_values[idx_grid] = self._psi4_object_ao_basis_sets.compute_phi(
+  #     #     grids[idx_grid, :])
+
+  #   # # Returns zero values
+  #   # Vpot = psi4.core.VBase.build(
+  #   #     self._psi4_object_ao_basis_sets, self._psi4_object_ksdft_functional, "RV")
+  #   # Vpot.initialize()
+  #   # # Grab a "points function" to compute the Phi matrices
+  #   # points_func = Vpot.properties()[0]
+  #   # # Grab a block and obtain its local mapping
+  #   # block = Vpot.get_block(1)
+  #   # npoints = block.npoints()
+  #   # print(npoints)
+  #   # lpos = np.array(block.functions_local_to_global())
+  #   # print("Local basis function mapping")
+  #   # print(lpos)
+  #   # # Copmute phi, note the number of points and function per phi changes.
+  #   # phi = np.array(points_func.basis_values()["PHI"])[:npoints, :lpos.shape[0]]
+  #   # print("\nPhi Matrix")
+  #   # print(np.shape(phi))
+  #   # print(phi)
 
 
   def gener_numerical_integral_grids_and_weights(self):

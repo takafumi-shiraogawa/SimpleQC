@@ -1,5 +1,4 @@
 import numpy as np
-import psi4
 import interface_psi4 as ipsi4
 
 
@@ -11,6 +10,8 @@ class driver():
     self._ksdft_functional_name = ksdft_functional_name
     self._num_electrons = nuclear_numbers.sum()
 
+    if self._num_electrons % 2 != 0:
+      raise NotImplementedError("Odd-electron system cannot be computed!")
 
   @staticmethod
   def solve_one_electron_problem(orthogonalizer, fock_matrix):
@@ -49,6 +50,12 @@ class driver():
   def scf(self):
     # Not direct SCF
 
+    if self._ksdft_functional_name == '' or self._ksdft_functional_name == None:
+      flag_ksdft = False
+    else:
+      flag_ksdft = True
+      import psi4
+
     # internal parameters
     num_max_scf_iter = 1000
 
@@ -63,6 +70,9 @@ class driver():
     ao_hartree_potential_integral = proc_ao_integral.ao_hartree_potential_integral()
     ao_electron_repulsion_integral = proc_ao_integral.ap_electron_repulsion_integral()
     ao_overlap_integral = proc_ao_integral.ao_overlap_integral()
+
+    if flag_ksdft:
+      proc_ao_integral.set_Vpot()
 
     # Compute core_hamiltonian
     core_hamiltonian = ao_kinetic_integral + ao_hartree_potential_integral
