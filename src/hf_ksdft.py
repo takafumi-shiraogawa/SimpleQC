@@ -68,6 +68,9 @@ class driver():
     ao_electron_repulsion_integral = proc_ao_integral.ap_electron_repulsion_integral()
     ao_overlap_integral = proc_ao_integral.ao_overlap_integral()
 
+    if flag_ksdft:
+      proc_ao_integral.set_Vpot()
+
     # Compute core_hamiltonian
     core_hamiltonian = ao_kinetic_integral + ao_hartree_potential_integral
 
