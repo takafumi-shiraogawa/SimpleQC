@@ -1,3 +1,7 @@
 *.pyc
 *.dat
 *.xyz
+*.gjf
+*.log
+*.conf
+*.sh
