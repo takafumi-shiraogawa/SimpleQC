@@ -15,5 +15,5 @@ Oshiro Kai (@Kai-Oshiro)
 
 
 ## Inputs
-sqc.conf: Configuration file of SimpleQC
+sqc.conf: Configuration file of SimpleQC  
 *.xyz: XYZ file of a molecular geometry
