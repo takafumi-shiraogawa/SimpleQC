@@ -42,7 +42,13 @@ def get_calc_params():
   xyz_file_name = sqc_conf['calc']['geom_xyz']
   basis_set_name = sqc_conf['calc']['gauss_basis_set']
   ksdft_functional_name = sqc_conf['calc']['ksdft_functional']
+  molecular_charge = sqc_conf['calc']['molecular_charge']
+  spin_multiplicity = sqc_conf['calc']['spin_multiplicity']
+
+  molecular_charge = int(molecular_charge)
+  spin_multiplicity = int(spin_multiplicity)
 
   mol_xyz, nuclear_numbers, geom_coordinates = read_xyz(xyz_file_name)
 
-  return mol_xyz, nuclear_numbers, geom_coordinates, basis_set_name, ksdft_functional_name
+  return mol_xyz, nuclear_numbers, geom_coordinates, basis_set_name, \
+    ksdft_functional_name, molecular_charge, spin_multiplicity

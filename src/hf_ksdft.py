@@ -3,16 +3,19 @@ import interface_psi4 as ipsi4
 
 
 class driver():
-  def __init__(self, mol_xyz, nuclear_numbers, geom_coordinates, basis_set_name, ksdft_functional_name):
+  def __init__(self, mol_xyz, nuclear_numbers, geom_coordinates,
+               basis_set_name, ksdft_functional_name,
+               molecular_charge, spin_multiplicity):
     self._mol_xyz = mol_xyz
     self._nuclear_numbers = nuclear_numbers
     self._geom_coordinates = geom_coordinates
     self._basis_set_name = basis_set_name
     self._ksdft_functional_name = ksdft_functional_name
-    self._num_electrons = np.sum(nuclear_numbers)
+    self._num_electrons = np.sum(nuclear_numbers) - molecular_charge
+    self._spin_multiplicity = spin_multiplicity
 
-    if self._num_electrons % 2 != 0:
-      raise NotImplementedError("Odd-electron system cannot be computed!")
+    if self._spin_multiplicity != 1:
+      raise NotImplementedError("Unrestricted calculation cannot be performed!")
 
   @staticmethod
   def solve_one_electron_problem(orthogonalizer, fock_matrix):
