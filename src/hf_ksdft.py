@@ -123,7 +123,6 @@ class driver():
           - 0.5 * exchange_in_Fock_matrix
 
       # Calculate the electronic energy (without nuclei repulsion)
-      # print(np.shape(np.matmul(density_matrix_in_ao_basis, core_hamiltonian + fock_matrix)))
       # electronic_energy = np.matmul(density_matrix_in_ao_basis, core_hamiltonian + fock_matrix)
       electronic_energy = 0.5 * \
           np.einsum('pq,pq->', density_matrix_in_ao_basis,
