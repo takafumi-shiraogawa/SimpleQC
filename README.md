@@ -11,7 +11,7 @@ Basis_Set_Exchange: for processing molecular parameters and basis sets
 
 ## Contributors
 Takafumi Shiraogawa (@takafumi-shiraogawa)  
-Oshiro Kai (@Kai-Oshiro)
+Kai Oshiro (@Kai-Oshiro)
 
 
 ## Inputs
