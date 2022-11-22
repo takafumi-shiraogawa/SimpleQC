@@ -222,12 +222,24 @@ class driver():
       else:
         charge_matrix = np.matmul(density_matrix_in_ao_basis[0] + density_matrix_in_ao_basis[1],
                                   ao_overlap_integral)
+        spin_diff_charge_matrix = np.matmul(density_matrix_in_ao_basis[0] - \
+                                  density_matrix_in_ao_basis[1],
+                                  ao_overlap_integral)
 
       num_atom = len(self._nuclear_numbers)
       mulliken_atomic_charges = np.zeros(num_atom)
       for i in range(len(ao_atomic_affiliation)):
         mulliken_atomic_charges[ao_atomic_affiliation[i]] += -charge_matrix[i, i]
       mulliken_atomic_charges += self._nuclear_numbers
+
+      if self._spin_multiplicity != 1:
+        spin_diff_mulliken_atomic_charges = np.zeros(num_atom)
+        for i in range(len(ao_atomic_affiliation)):
+          spin_diff_mulliken_atomic_charges[ao_atomic_affiliation[i]
+                                            ] += spin_diff_charge_matrix[i, i]
+
       print("Mulliken atomic charges (|e|):", *mulliken_atomic_charges)
+      if self._spin_multiplicity != 1:
+        print("Mulliken atomic spin charges (|e|):", *spin_diff_mulliken_atomic_charges)
 
     calc_mulliken_atomic_charges(density_matrix_in_ao_basis, ao_overlap_integral)
