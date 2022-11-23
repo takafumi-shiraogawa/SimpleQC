@@ -39,9 +39,9 @@ class driver():
         for a in range(num_virtual_mo):
           for b in range(num_virtual_mo):
             if i == j and a == b:
-              ia = i * num_virtual_mo + a
-              jb = j * num_virtual_mo + b
-              orbital_energy_contributions[ia, jb] = \
+              idx_ia = i * num_virtual_mo + a
+              idx_jb = j * num_virtual_mo + b
+              orbital_energy_contributions[idx_ia, idx_jb] = \
                   virtual_mo_energies[a] - occupied_mo_energies[i]
 
     # Calculate MO itnegrals in chemist's notation
@@ -71,10 +71,10 @@ class driver():
       for j in range(num_occupied_mo):
         for a in range(num_virtual_mo):
           for b in range(num_virtual_mo):
-            ia = i * num_virtual_mo + a
-            jb = j * num_virtual_mo + b
-            cis_hamiltonian[ia, jb] = \
-              orbital_energy_contributions[ia, jb] + \
+            idx_ia = i * num_virtual_mo + a
+            idx_jb = j * num_virtual_mo + b
+            cis_hamiltonian[idx_ia, idx_jb] = \
+              orbital_energy_contributions[idx_ia, idx_jb] + \
                 2.0 * mo_integral_iajb[i, a, j, b] - mo_integral_ijab[i, j, a, b]
 
     # Diagonalize the CIS Hamiltonian matrix
