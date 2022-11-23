@@ -17,9 +17,6 @@ def stop_watch(func):
     print("")
     print("elapsed_time:{0}".format(elapsed_time) + "[sec]")
 
-    with open('elapsed_time.dat', 'w') as tfile:
-      tfile.write("elapsed_time:{0}".format(elapsed_time) + "[sec]")
-
     return result
   return wrapper
 
