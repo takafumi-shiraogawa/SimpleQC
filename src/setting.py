@@ -58,5 +58,14 @@ def get_calc_params():
   except:
     flag_cis = False
 
+  try:
+    if (sqc_conf['calc']['post_hartree-fock']).lower() == 'mp2':
+      flag_mp2 = True
+    else:
+      flag_mp2 = False
+  except:
+    flag_mp2 = False
+
   return mol_xyz, nuclear_numbers, geom_coordinates, basis_set_name, \
-    ksdft_functional_name, molecular_charge, spin_multiplicity, flag_cis
+    ksdft_functional_name, molecular_charge, spin_multiplicity, flag_cis, \
+    flag_mp2
