@@ -2,6 +2,7 @@ from functools import wraps
 import time
 import setting as conf
 import hf_ksdft
+import cis_tdhf_tda_tddft
 
 def stop_watch(func):
   """ Measure time """
@@ -26,13 +27,23 @@ def stop_watch(func):
 def run_hf_ksdft():
   mol_xyz, nuclear_numbers, geom_coordinates, basis_set_name, \
     ksdft_functional_name, molecular_charge, spin_multiplicity, \
-      = conf.get_calc_params()
-  calc_mol = hf_ksdft.driver(mol_xyz, nuclear_numbers,
+    flag_cis = conf.get_calc_params()
+  myscf = hf_ksdft.driver(mol_xyz, nuclear_numbers,
                     geom_coordinates, basis_set_name,
                     ksdft_functional_name, molecular_charge,
                     spin_multiplicity)
-  calc_mol.scf()
+  myscf.scf()
+
+  return myscf, flag_cis
+
+@stop_watch
+def run_cis(scf_object):
+  mycis = cis_tdhf_tda_tddft.driver(scf_object)
+
+  return mycis.cis()
 
 
 if __name__ == "__main__":
-  run_hf_ksdft()
+  scf, flag_cis = run_hf_ksdft()
+  if flag_cis:
+    cis = run_cis(scf)

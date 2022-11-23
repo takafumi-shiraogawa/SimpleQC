@@ -215,6 +215,16 @@ class driver():
       density_matrix_in_ao_basis = driver.calc_density_matrix_in_ao_basis(
           self, mo_coefficients)
 
+
+    ### Save the SCF results for the post-Hartree-Fock theories
+    self.density_matrix_in_ao_basis = density_matrix_in_ao_basis
+    self.num_ao = num_ao
+    self.mo_energies = orbital_energies
+    self.mo_coefficients = mo_coefficients
+    self.scf_energy = total_energy
+    self.ao_electron_repulsion_integral = ao_electron_repulsion_integral
+
+
     def calc_mulliken_atomic_charges(density_matrix_in_ao_basis, ao_overlap_integral):
       ao_atomic_affiliation = proc_ao_integral.check_basis_atomic_affiliation()
       if self._spin_multiplicity == 1:

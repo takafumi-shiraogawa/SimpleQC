@@ -50,5 +50,13 @@ def get_calc_params():
 
   mol_xyz, nuclear_numbers, geom_coordinates = read_xyz(xyz_file_name)
 
+  try:
+    if (sqc_conf['calc']['excited_state']).lower() == 'cis':
+      flag_cis = True
+    else:
+      flag_cis = False
+  except:
+    flag_cis = False
+
   return mol_xyz, nuclear_numbers, geom_coordinates, basis_set_name, \
-    ksdft_functional_name, molecular_charge, spin_multiplicity
+    ksdft_functional_name, molecular_charge, spin_multiplicity, flag_cis
