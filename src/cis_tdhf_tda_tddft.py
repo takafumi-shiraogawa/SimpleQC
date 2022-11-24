@@ -20,7 +20,7 @@ class driver():
     virtual_mo_energies = self._scf.mo_energies[num_occupied_mo:]
     dim_cis_hamiltonian = num_occupied_mo * num_virtual_mo
 
-    if dim_cis_hamiltonian > 1000:
+    if dim_cis_hamiltonian > 100:
       raise NotImplementedError(
           "The number of atomic orbitals is too much for the current CIS implementation.")
 

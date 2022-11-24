@@ -20,7 +20,7 @@ class driver():
     virtual_mo_energies = self._scf.mo_energies[num_occupied_mo:]
     dim_mp2 = num_occupied_mo * num_virtual_mo
 
-    if dim_mp2 > 1000:
+    if dim_mp2 > 100:
       raise NotImplementedError(
           "The number of atomic orbitals is too much for the current MP2 implementation.")
 
