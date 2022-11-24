@@ -41,7 +41,10 @@ def get_calc_params():
 
   xyz_file_name = sqc_conf['calc']['geom_xyz']
   basis_set_name = sqc_conf['calc']['gauss_basis_set']
-  ksdft_functional_name = sqc_conf['calc']['ksdft_functional']
+  try:
+    ksdft_functional_name = sqc_conf['calc']['ksdft_functional']
+  except:
+    ksdft_functional_name = None
   molecular_charge = sqc_conf['calc']['molecular_charge']
   spin_multiplicity = sqc_conf['calc']['spin_multiplicity']
 
