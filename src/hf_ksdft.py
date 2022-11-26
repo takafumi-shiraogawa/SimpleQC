@@ -90,9 +90,9 @@ class driver():
     ### Preprocessing for SCF
 
     proc_ao_integral = ipsi4.proc_psi4(
-        self._mol_xyz, self._nuclear_numbers,
-        self._geom_coordinates, self._basis_set_name,
-        self._ksdft_functional_name)
+      self._mol_xyz, self._nuclear_numbers,
+      self._geom_coordinates, self._basis_set_name,
+      self._ksdft_functional_name)
 
     # Compute all requisite analytical AO integrations
     ao_kinetic_integral = proc_ao_integral.ao_kinetic_integral()
@@ -105,7 +105,7 @@ class driver():
       num_ao = len(ao_overlap_integral)
       if num_ao > 120:
         raise NotImplementedError(
-            "The number of AOs is too large for the current implementation.")
+          "The number of AOs is too large for the current implementation.")
       real_space_grids, weights_grids = \
         proc_ao_integral.gener_numerical_integral_grids_and_weights()
       num_grids = len(real_space_grids)
@@ -117,7 +117,7 @@ class driver():
 
     # Prepare the orthogonalizer S^(-1/2) for solving the one-electron eigenvalue problem
     overlap_eigen_value, overlap_eigen_function = np.linalg.eigh(
-        ao_overlap_integral)
+      ao_overlap_integral)
 
     # Compute the number of atomic orbitals
     num_ao = len(overlap_eigen_value)
@@ -128,15 +128,15 @@ class driver():
       overlap_eigen_value[i] = overlap_eigen_value[i] ** (-0.5)
     half_inverse_overlap_eigen_value = np.diag(overlap_eigen_value)
     orthogonalizer = np.matmul(
-        overlap_eigen_function, half_inverse_overlap_eigen_value)
+      overlap_eigen_function, half_inverse_overlap_eigen_value)
     orthogonalizer = np.matmul(orthogonalizer, np.transpose(
-        overlap_eigen_function.conjugate()))
+      overlap_eigen_function.conjugate()))
 
     # Calculate initial guess of the density matrix by neglecting two-electron terms
     # of the Fock matrix
     # Solving the one-electron eigenvalue problem
     orbital_energies, temp_mo_coefficients = driver.solve_one_electron_problem(
-        orthogonalizer, core_hamiltonian)
+      orthogonalizer, core_hamiltonian)
 
     # Form MO coefficients in the original basis
     if self._spin_multiplicity == 1:
@@ -148,23 +148,20 @@ class driver():
 
     # Calculate density matrix in AO basis
     density_matrix_in_ao_basis = driver.calc_density_matrix_in_ao_basis(
-        self, mo_coefficients)
+      self, mo_coefficients)
 
 
     nuclear_repulsion_energy = driver.calc_nuclei_nuclei_repulsion_energy(
-        self._geom_coordinates, self._nuclear_numbers)
+      self._geom_coordinates, self._nuclear_numbers)
 
     if self._flag_ksdft:
       # ao_values_at_grids is in the dimension (num_grids, num_ao).
       electron_density_at_grids = np.zeros(num_grids)
       # n: index for the grids
       # p, q: indexes for AOs
-      # electron_density_at_grids = np.einsum(
-      #     'n,pq,np,nq->n', weights_grids, density_matrix_in_ao_basis,
-      #     ao_values_at_grids, ao_values_at_grids)
       electron_density_at_grids = np.einsum(
-          'pq,np,nq->n', density_matrix_in_ao_basis,
-          ao_values_at_grids, ao_values_at_grids)
+        'pq,np,nq->n', density_matrix_in_ao_basis,
+        ao_values_at_grids, ao_values_at_grids)
 
     ### Perform SCF
     for idx_scf in range(num_max_scf_iter):
@@ -185,7 +182,7 @@ class driver():
       # Calculate Fock matrix in AO basis
       if self._spin_multiplicity == 1:
         electron_repulsion_in_Fock_matrix = np.einsum(
-            'pqrs,rs->pq', ao_electron_repulsion_integral, density_matrix_in_ao_basis)
+          'pqrs,rs->pq', ao_electron_repulsion_integral, density_matrix_in_ao_basis)
         if not self._flag_ksdft:
           exchange_in_Fock_matrix = np.einsum(
             'prqs,rs->pq', ao_electron_repulsion_integral, density_matrix_in_ao_basis)
@@ -196,18 +193,18 @@ class driver():
             + exchange_correlation_potential_in_Fock_matrix
       else:
         electron_repulsion_in_Fock_matrix = np.einsum(
-            'pqrs,rs->pq', ao_electron_repulsion_integral,
-            density_matrix_in_ao_basis[0] + density_matrix_in_ao_basis[1])
+          'pqrs,rs->pq', ao_electron_repulsion_integral,
+          density_matrix_in_ao_basis[0] + density_matrix_in_ao_basis[1])
         # in alpha-spin orbital basis
         alpha_exchange_in_Fock_matrix = np.einsum(
-            'prqs,rs->pq', ao_electron_repulsion_integral, density_matrix_in_ao_basis[0])
+          'prqs,rs->pq', ao_electron_repulsion_integral, density_matrix_in_ao_basis[0])
         alpha_fock_matrix = core_hamiltonian + electron_repulsion_in_Fock_matrix \
-            - alpha_exchange_in_Fock_matrix
+          - alpha_exchange_in_Fock_matrix
         # in beta-spin orbital basis
         beta_exchange_in_Fock_matrix = np.einsum(
-            'prqs,rs->pq', ao_electron_repulsion_integral, density_matrix_in_ao_basis[1])
+          'prqs,rs->pq', ao_electron_repulsion_integral, density_matrix_in_ao_basis[1])
         beta_fock_matrix = core_hamiltonian + electron_repulsion_in_Fock_matrix \
-            - beta_exchange_in_Fock_matrix
+          - beta_exchange_in_Fock_matrix
 
       # Calculate the electronic energy (without nuclei repulsion)
       # electronic_energy = np.matmul(density_matrix_in_ao_basis, core_hamiltonian + fock_matrix)
@@ -227,8 +224,8 @@ class driver():
           electronic_energy += exchange_correlation_energy
       else:
         electronic_energy = 0.5 * \
-            np.einsum('pq,pq->', density_matrix_in_ao_basis[0] + \
-              density_matrix_in_ao_basis[1], core_hamiltonian)
+          np.einsum('pq,pq->', density_matrix_in_ao_basis[0] + \
+            density_matrix_in_ao_basis[1], core_hamiltonian)
         electronic_energy += 0.5 * \
           np.einsum('pq,pq->', density_matrix_in_ao_basis[0],
                     alpha_fock_matrix)
@@ -264,7 +261,7 @@ class driver():
 
       # Calculate density matrix in AO basis
       density_matrix_in_ao_basis = driver.calc_density_matrix_in_ao_basis(
-          self, mo_coefficients)
+        self, mo_coefficients)
 
       # Calculate the electron density at the grids
       if self._flag_ksdft:
