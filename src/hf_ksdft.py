@@ -11,14 +11,18 @@ class driver():
     self._nuclear_numbers = nuclear_numbers
     self._geom_coordinates = geom_coordinates
     self._basis_set_name = basis_set_name
-    self._ksdft_functional_name = str(ksdft_functional_name).lower()
+    self._ksdft_functional_name = ksdft_functional_name
     self._num_electrons = np.sum(nuclear_numbers) - molecular_charge
     self._spin_multiplicity = spin_multiplicity
 
-    if self._ksdft_functional_name == 'lda':
-      self._flag_ksdft = True
-    else:
+    if self._ksdft_functional_name == None:
       self._flag_ksdft = False
+    else:
+      if str(self._ksdft_functional_name).lower() == 'lda':
+        self._flag_ksdft = True
+      else:
+        raise NotImplementedError(
+        "Only the LDA exchange functional is implemented.")
 
     if self._flag_ksdft and self._spin_multiplicity != 1:
       raise NotImplementedError(
