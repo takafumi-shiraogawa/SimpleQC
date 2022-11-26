@@ -135,6 +135,17 @@ class proc_psi4():
     return grids, weights
 
 
+  def gener_ao_values_at_grids(self, real_space_grids):
+    num_grids = len(real_space_grids)
+    num_ao = self._psi4_object_ao_basis_sets.nbf()
+    ao_values_at_grids = np.zeros((num_grids, num_ao))
+    for idx_grid in range(num_grids):
+      ao_values_at_grids[idx_grid] = self._psi4_object_ao_basis_sets.compute_phi(
+        *real_space_grids[idx_grid, :])
+
+    return ao_values_at_grids
+
+
   def check_basis_atomic_affiliation(self):
     # It is SO in Psi4
     num_ao = self._psi4_object_ao_basis_sets.nbf()
