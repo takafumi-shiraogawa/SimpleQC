@@ -5,3 +5,4 @@
 *.log
 *.conf
 *.sh
+test_**.py
