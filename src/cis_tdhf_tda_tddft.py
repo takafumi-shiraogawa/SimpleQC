@@ -8,7 +8,7 @@ class driver():
     # Not efficient but simple code
 
     if self._scf._spin_multiplicity != 1:
-      raise NotImplementedError("Current CIS only support the singlet state.")
+      raise NotImplementedError("Current CIS only supports the singlet state.")
 
     # Set parameters
     num_occupied_mo = int(self._scf._num_electrons / 2)
