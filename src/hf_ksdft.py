@@ -1,5 +1,6 @@
 import numpy as np
 import interface_psi4 as ipsi4
+import ksdft_functional as kdf
 
 
 class driver():
@@ -14,6 +15,19 @@ class driver():
     self._num_electrons = np.sum(nuclear_numbers) - molecular_charge
     self._spin_multiplicity = spin_multiplicity
 
+    if self._ksdft_functional_name == None:
+      self._flag_ksdft = False
+    else:
+      if str(self._ksdft_functional_name).lower() == 'lda':
+        self._flag_ksdft = True
+      else:
+        raise NotImplementedError(
+        "Only the LDA exchange functional is implemented.")
+
+    if self._flag_ksdft and self._spin_multiplicity != 1:
+      raise NotImplementedError(
+        "Unrestricted KS-DFT cannot be used."
+      )
 
   @staticmethod
   def solve_one_electron_problem(orthogonalizer, fock_matrix):
@@ -74,20 +88,15 @@ class driver():
   def scf(self):
     # Not direct SCF
 
-    if self._ksdft_functional_name == '' or self._ksdft_functional_name == None:
-      flag_ksdft = False
-    else:
-      flag_ksdft = True
-
     # internal parameters
     num_max_scf_iter = 1000
 
     ### Preprocessing for SCF
 
     proc_ao_integral = ipsi4.proc_psi4(
-        self._mol_xyz, self._nuclear_numbers,
-        self._geom_coordinates, self._basis_set_name,
-        self._ksdft_functional_name)
+      self._mol_xyz, self._nuclear_numbers,
+      self._geom_coordinates, self._basis_set_name,
+      self._ksdft_functional_name)
 
     # Compute all requisite analytical AO integrations
     ao_kinetic_integral = proc_ao_integral.ao_kinetic_integral()
@@ -95,15 +104,24 @@ class driver():
     ao_electron_repulsion_integral = proc_ao_integral.ap_electron_repulsion_integral()
     ao_overlap_integral = proc_ao_integral.ao_overlap_integral()
 
-    if flag_ksdft:
-      proc_ao_integral.set_Vpot()
+    if self._flag_ksdft:
+      # In the practical implementation, this should be calculated on the fly.
+      num_ao = len(ao_overlap_integral)
+      if num_ao > 120:
+        raise NotImplementedError(
+          "The number of AOs is too large for the current implementation.")
+      real_space_grids, weights_grids = \
+        proc_ao_integral.gener_numerical_integral_grids_and_weights()
+      num_grids = len(real_space_grids)
+      ao_values_at_grids = np.zeros((num_grids, num_ao))
+      ao_values_at_grids = proc_ao_integral.gener_ao_values_at_grids(real_space_grids)
 
     # Compute core_hamiltonian
     core_hamiltonian = ao_kinetic_integral + ao_hartree_potential_integral
 
     # Prepare the orthogonalizer S^(-1/2) for solving the one-electron eigenvalue problem
     overlap_eigen_value, overlap_eigen_function = np.linalg.eigh(
-        ao_overlap_integral)
+      ao_overlap_integral)
 
     # Compute the number of atomic orbitals
     num_ao = len(overlap_eigen_value)
@@ -114,15 +132,15 @@ class driver():
       overlap_eigen_value[i] = overlap_eigen_value[i] ** (-0.5)
     half_inverse_overlap_eigen_value = np.diag(overlap_eigen_value)
     orthogonalizer = np.matmul(
-        overlap_eigen_function, half_inverse_overlap_eigen_value)
+      overlap_eigen_function, half_inverse_overlap_eigen_value)
     orthogonalizer = np.matmul(orthogonalizer, np.transpose(
-        overlap_eigen_function.conjugate()))
+      overlap_eigen_function.conjugate()))
 
     # Calculate initial guess of the density matrix by neglecting two-electron terms
     # of the Fock matrix
     # Solving the one-electron eigenvalue problem
     orbital_energies, temp_mo_coefficients = driver.solve_one_electron_problem(
-        orthogonalizer, core_hamiltonian)
+      orthogonalizer, core_hamiltonian)
 
     # Form MO coefficients in the original basis
     if self._spin_multiplicity == 1:
@@ -134,50 +152,84 @@ class driver():
 
     # Calculate density matrix in AO basis
     density_matrix_in_ao_basis = driver.calc_density_matrix_in_ao_basis(
-        self, mo_coefficients)
+      self, mo_coefficients)
 
 
     nuclear_repulsion_energy = driver.calc_nuclei_nuclei_repulsion_energy(
-        self._geom_coordinates, self._nuclear_numbers)
+      self._geom_coordinates, self._nuclear_numbers)
 
+    if self._flag_ksdft:
+      # ao_values_at_grids is in the dimension (num_grids, num_ao).
+      electron_density_at_grids = np.zeros(num_grids)
+      # n: index for the grids
+      # p, q: indexes for AOs
+      electron_density_at_grids = np.einsum(
+        'pq,np,nq->n', density_matrix_in_ao_basis,
+        ao_values_at_grids, ao_values_at_grids)
 
     ### Perform SCF
     for idx_scf in range(num_max_scf_iter):
+
+      # print('The number of electrons from the grids:', np.einsum(
+      #     'n,n->', weights_grids, electron_density_at_grids))
+
+      if self._flag_ksdft:
+        # Compute exchange-correlation potential
+        exchange_correlation_potential = kdf.lda_potential(electron_density_at_grids)
+
+        # # Compute exchange-correlation potential in the Fock matrix
+        exchange_correlation_potential_in_Fock_matrix = np.zeros((num_ao, num_ao))
+        exchange_correlation_potential_in_Fock_matrix = np.einsum(
+          'n,np,n,nq->pq', weights_grids, ao_values_at_grids,
+          exchange_correlation_potential, ao_values_at_grids)
+
       # Calculate Fock matrix in AO basis
       if self._spin_multiplicity == 1:
         electron_repulsion_in_Fock_matrix = np.einsum(
-            'pqrs,rs->pq', ao_electron_repulsion_integral, density_matrix_in_ao_basis)
-        exchange_in_Fock_matrix = np.einsum(
+          'pqrs,rs->pq', ao_electron_repulsion_integral, density_matrix_in_ao_basis)
+        if not self._flag_ksdft:
+          exchange_in_Fock_matrix = np.einsum(
             'prqs,rs->pq', ao_electron_repulsion_integral, density_matrix_in_ao_basis)
-        fock_matrix = core_hamiltonian + electron_repulsion_in_Fock_matrix \
+          fock_matrix = core_hamiltonian + electron_repulsion_in_Fock_matrix \
             - 0.5 * exchange_in_Fock_matrix
+        else:
+          fock_matrix = core_hamiltonian + electron_repulsion_in_Fock_matrix \
+            + exchange_correlation_potential_in_Fock_matrix
       else:
         electron_repulsion_in_Fock_matrix = np.einsum(
-            'pqrs,rs->pq', ao_electron_repulsion_integral,
-            density_matrix_in_ao_basis[0] + density_matrix_in_ao_basis[1])
+          'pqrs,rs->pq', ao_electron_repulsion_integral,
+          density_matrix_in_ao_basis[0] + density_matrix_in_ao_basis[1])
         # in alpha-spin orbital basis
         alpha_exchange_in_Fock_matrix = np.einsum(
-            'prqs,rs->pq', ao_electron_repulsion_integral, density_matrix_in_ao_basis[0])
+          'prqs,rs->pq', ao_electron_repulsion_integral, density_matrix_in_ao_basis[0])
         alpha_fock_matrix = core_hamiltonian + electron_repulsion_in_Fock_matrix \
-            - alpha_exchange_in_Fock_matrix
+          - alpha_exchange_in_Fock_matrix
         # in beta-spin orbital basis
         beta_exchange_in_Fock_matrix = np.einsum(
-            'prqs,rs->pq', ao_electron_repulsion_integral, density_matrix_in_ao_basis[1])
+          'prqs,rs->pq', ao_electron_repulsion_integral, density_matrix_in_ao_basis[1])
         beta_fock_matrix = core_hamiltonian + electron_repulsion_in_Fock_matrix \
-            - beta_exchange_in_Fock_matrix
+          - beta_exchange_in_Fock_matrix
 
       # Calculate the electronic energy (without nuclei repulsion)
       # electronic_energy = np.matmul(density_matrix_in_ao_basis, core_hamiltonian + fock_matrix)
       if self._spin_multiplicity == 1:
-        electronic_energy = 0.5 * \
+        if not self._flag_ksdft:
+          electronic_energy = 0.5 * \
             np.einsum('pq,pq->', density_matrix_in_ao_basis,
                       core_hamiltonian + fock_matrix)
-        # np.sum(np.multiply(
-        #     density_matrix_in_ao_basis, core_hamiltonian + fock_matrix))
+          # np.sum(np.multiply(
+          #     density_matrix_in_ao_basis, core_hamiltonian + fock_matrix))
+        else:
+          exchange_correlation_energy = kdf.lda_energy(
+            electron_density_at_grids, weights_grids)
+          electronic_energy = 0.5 * \
+            np.einsum('pq,pq->', density_matrix_in_ao_basis,
+                      2.0 * core_hamiltonian + electron_repulsion_in_Fock_matrix)
+          electronic_energy += exchange_correlation_energy
       else:
         electronic_energy = 0.5 * \
-            np.einsum('pq,pq->', density_matrix_in_ao_basis[0] + \
-              density_matrix_in_ao_basis[1], core_hamiltonian)
+          np.einsum('pq,pq->', density_matrix_in_ao_basis[0] + \
+            density_matrix_in_ao_basis[1], core_hamiltonian)
         electronic_energy += 0.5 * \
           np.einsum('pq,pq->', density_matrix_in_ao_basis[0],
                     alpha_fock_matrix)
@@ -213,8 +265,13 @@ class driver():
 
       # Calculate density matrix in AO basis
       density_matrix_in_ao_basis = driver.calc_density_matrix_in_ao_basis(
-          self, mo_coefficients)
+        self, mo_coefficients)
 
+      # Calculate the electron density at the grids
+      if self._flag_ksdft:
+        electron_density_at_grids = np.einsum(
+          'pq,np,nq->n', density_matrix_in_ao_basis,
+          ao_values_at_grids, ao_values_at_grids)
 
     ### Save the SCF results for the post-Hartree-Fock theories
     self.density_matrix_in_ao_basis = density_matrix_in_ao_basis

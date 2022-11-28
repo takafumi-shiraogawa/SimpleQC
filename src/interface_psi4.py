@@ -67,56 +67,6 @@ class proc_psi4():
     self._Vpot.properties()[0].set_pointers(density_matrix)
 
 
-  # def ao_values(self):
-  #   # at each grid
-  #   svwn_w, wfn = psi4.energy("SVWN", return_wfn=True)
-  #   Vpot = wfn.V_potential()
-
-  #   # Grab a "points function" to compute the Phi matrices
-  #   points_func = Vpot.properties()[0]
-
-  #   # Grab a block and obtain its local mapping
-  #   block = Vpot.get_block(1)
-  #   npoints = block.npoints()
-  #   lpos = np.array(block.functions_local_to_global())
-  #   print("Local basis function mapping")
-  #   print(lpos)
-  #   print(len(lpos))
-
-  #   # Copmute phi, note the number of points and function per phi changes.
-  #   phi = np.array(points_func.basis_values()["PHI"])[:npoints, :lpos.shape[0]]
-  #   print("\nPhi Matrix")
-  #   print(phi)
-  #   print(np.shape(phi))
-  #   phi_x = np.array(points_func.basis_values()["PHI_X"])[:npoints, :lpos.shape[0]]
-  #   print(np.shape(phi_x))
-
-  #   # num_grids = len(grids)
-  #   # for idx_grid in range(num_grids):
-  #     # # compute_phi does not work!
-  #     # ao_values[idx_grid] = self._psi4_object_ao_basis_sets.compute_phi(
-  #     #     grids[idx_grid, :])
-
-  #   # # Returns zero values
-  #   # Vpot = psi4.core.VBase.build(
-  #   #     self._psi4_object_ao_basis_sets, self._psi4_object_ksdft_functional, "RV")
-  #   # Vpot.initialize()
-  #   # # Grab a "points function" to compute the Phi matrices
-  #   # points_func = Vpot.properties()[0]
-  #   # # Grab a block and obtain its local mapping
-  #   # block = Vpot.get_block(1)
-  #   # npoints = block.npoints()
-  #   # print(npoints)
-  #   # lpos = np.array(block.functions_local_to_global())
-  #   # print("Local basis function mapping")
-  #   # print(lpos)
-  #   # # Copmute phi, note the number of points and function per phi changes.
-  #   # phi = np.array(points_func.basis_values()["PHI"])[:npoints, :lpos.shape[0]]
-  #   # print("\nPhi Matrix")
-  #   # print(np.shape(phi))
-  #   # print(phi)
-
-
   def gener_numerical_integral_grids_and_weights(self):
     # Generate 3d Cartesian grids and weights for each grid based on the Becke's method.
     # Refer to https://github.com/psi4/psi4numpy/blob/master/Tutorials/04_Density_Functional_Theory/4a_Grids.ipynb
@@ -133,6 +83,17 @@ class proc_psi4():
     grids[:, 2] = grids_z
 
     return grids, weights
+
+
+  def gener_ao_values_at_grids(self, real_space_grids):
+    num_grids = len(real_space_grids)
+    num_ao = self._psi4_object_ao_basis_sets.nbf()
+    ao_values_at_grids = np.zeros((num_grids, num_ao))
+    for idx_grid in range(num_grids):
+      ao_values_at_grids[idx_grid] = self._psi4_object_ao_basis_sets.compute_phi(
+        *real_space_grids[idx_grid, :])
+
+    return ao_values_at_grids
 
 
   def check_basis_atomic_affiliation(self):
