@@ -73,8 +73,8 @@ class driver():
       return density_matrix
 
   @staticmethod
-  def calc_nuclei_nuclei_repulsion_energy(coordinates, charges):
-    #: Conversion factor from Angstrom to Bohr
+  def calc_nuclei_repulsion_energy(coordinates, charges):
+    # Conversion factor from Angstrom to Bohr
     ang_to_bohr = 1 / 0.52917721067
     natoms = len(coordinates)
     ret = 0.0
@@ -155,7 +155,7 @@ class driver():
       self, mo_coefficients)
 
 
-    nuclear_repulsion_energy = driver.calc_nuclei_nuclei_repulsion_energy(
+    nuclear_repulsion_energy = driver.calc_nuclei_repulsion_energy(
       self._geom_coordinates, self._nuclear_numbers)
 
     if self._flag_ksdft:
@@ -177,7 +177,7 @@ class driver():
         # Compute exchange-correlation potential
         exchange_correlation_potential = kdf.lda_potential(electron_density_at_grids)
 
-        # # Compute exchange-correlation potential in the Fock matrix
+        # Compute exchange-correlation potential in the Fock matrix
         exchange_correlation_potential_in_Fock_matrix = np.zeros((num_ao, num_ao))
         exchange_correlation_potential_in_Fock_matrix = np.einsum(
           'n,np,n,nq->pq', weights_grids, ao_values_at_grids,
