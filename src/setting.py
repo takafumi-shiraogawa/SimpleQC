@@ -29,15 +29,21 @@ def read_xyz(xyz_file_name):
 
   return mol_xyz, np.array(nuclear_numbers), np.array(coordinates)
 
-def get_calc_params():
+def get_calc_params(flag_multiple_mols=False, another_conf_file_name='sqc2.conf'):
   """ Get parameters for the calculation.
   """
-  is_file = os.path.isfile('sqc.conf')
+  if not flag_multiple_mols:
+    is_file = os.path.isfile('sqc.conf')
+  else:
+    is_file = os.path.isfile(another_conf_file_name)
   if not is_file:
     raise FileExistsError("sqc.conf does not exist.")
 
   sqc_conf = configparser.ConfigParser()
-  sqc_conf.read('sqc.conf')
+  if not flag_multiple_mols:
+    sqc_conf.read('sqc.conf')
+  else:
+    sqc_conf.read(another_conf_file_name)
 
   xyz_file_name = sqc_conf['calc']['geom_xyz']
   basis_set_name = sqc_conf['calc']['gauss_basis_set']

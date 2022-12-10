@@ -10,6 +10,26 @@ def gener_psi4_geom(nuclear_numbers, geom_coordinates):
   return symbol_nuclear_numbers
 
 
+def calc_ao_repulsion_two_mols(full_mol_xyz, scf_object1, scf_object2):
+  if scf_object1.basis_set_object.name() != scf_object2.basis_set_object.name():
+    raise NotImplementedError("Basis sets for two molecules should be same.")
+  basis_set_name = str(scf_object1.basis_set_object.name())
+  mol = psi4.geometry(full_mol_xyz)
+  psi4.set_options({'basis': basis_set_name})
+  wfn = psi4.core.Wavefunction.build(mol, psi4.core.get_global_option('BASIS'))
+  mints = psi4.core.MintsHelper(wfn.basisset())
+
+  # Calculating the full integral is redundant since two diagonal blocks
+  # were computed in each SCF.
+  ao_repulsion_integral = np.asarray(mints.ao_eri(), dtype='float64')
+
+  num_ao_1 = scf_object1.basis_set_object.nbf()
+  ao_repulsion_integral = ao_repulsion_integral[:num_ao_1,
+                                                :num_ao_1, num_ao_1:, num_ao_1:]
+  return np.einsum('pq, rs, pqrs->', scf_object1.density_matrix_in_ao_basis,
+            scf_object2.density_matrix_in_ao_basis, ao_repulsion_integral)
+
+
 class proc_psi4():
   def __init__(self, mol_xyz, nuclear_numbers, geom_coordinates, basis_set_name, ksdft_functional_name):
     mol = psi4.geometry(mol_xyz)

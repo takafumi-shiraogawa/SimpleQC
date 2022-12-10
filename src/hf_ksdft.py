@@ -281,6 +281,8 @@ class driver():
     self.scf_energy = total_energy
     self.ao_electron_repulsion_integral = ao_electron_repulsion_integral
 
+    self.basis_set_object = proc_ao_integral._psi4_object_ao_basis_sets
+
 
     def calc_mulliken_atomic_charges(density_matrix_in_ao_basis, ao_overlap_integral):
       ao_atomic_affiliation = proc_ao_integral.check_basis_atomic_affiliation()
