@@ -10,6 +10,7 @@ For the post-Hartree-Fock methods, configuration interaction singles (CIS) theor
 
 The Kohn-Sham density functional theory (KS-DFT) calculations can be performed with the local density approximation (LDA) functional for the exchange(-correlation) potential and energy. The correlation part is neglected. Only the closed-shell systems can be calculated. The other functionals are not implemented.
 
+As an example of effective models at quantum chemistry level of theory, the electronic Coulomb interaction energy between two molecules can be calculated based on the Hartree-Fock theory.
 
 ## Requirements
 Psi4: for AO integral and for generating numerical grids and weights  
