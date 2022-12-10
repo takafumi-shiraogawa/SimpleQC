@@ -75,18 +75,6 @@ class proc_psi4():
     return np.asarray(self._mints.ao_overlap(), dtype='float64')
 
 
-  def set_Vpot(self):
-    self._Vpot = psi4.core.VBase.build(
-        self._psi4_object_ao_basis_sets, self._psi4_object_ksdft_functional, "RV")
-    self._Vpot.initialize()
-    self._Vpot.initialize()
-
-
-  def set_density_matrix_in_Vpot(self, density_matrix):
-    self._Vpot.set_D([density_matrix])
-    self._Vpot.properties()[0].set_pointers(density_matrix)
-
-
   def gener_numerical_integral_grids_and_weights(self):
     # Generate 3d Cartesian grids and weights for each grid based on the Becke's method.
     # Refer to https://github.com/psi4/psi4numpy/blob/master/Tutorials/04_Density_Functional_Theory/4a_Grids.ipynb
